@@ -16,24 +16,26 @@ function readStation() {
   let userInput = document.forms.search.station.value
 
   console.log(userInput)
-  fetchData(userInput)
-}
 
-// The actual fetching from the API happens here
-function fetchData(station) {
+  if (userInput === 'Tampere') {
 
-  if (station == 'Viiala') {
+    userInput = 'Tampere asema'
+  } else if (userInput === 'Tikkurila'){
 
-    station = 'VIA'
-  } else if (station == 'Helsinki') {
+    userInput = 'Tikkurila asema'
+  } else if (userInput === 'Helsinki') {
 
-    station = 'HKI'
+    userInput = 'Helsinki asema'
   } else {
 
-    station = 'TPE'
   }
+  swapStationName(userInput)
+}
 
-  fetch('https://rata.digitraffic.fi/api/v1/live-trains?station=' + station)
+// Translates the station to the shortened id that can be used when searching for the schedules
+function swapStationName(station) {
+  
+  fetch('https://rata.digitraffic.fi/api/v1/metadata/stations')
   .then(
     function(response) {
       if (response.status !== 200) {
@@ -47,20 +49,62 @@ function fetchData(station) {
 
         for (const key in data) {
           if (data.hasOwnProperty(key)) {
-            const element = data[key];
-            console.log(element)
+
+            const element = data[key]
+
+            if(element.stationName == station) {
+
+              station = element.stationShortCode
+            }
+            
           }
         }
+        fetchData(station)     
+      })
+    }
+  )
+  .catch(function(err) {
+    console.log('Fetch Error :-S', err)
+  })
+}
+
+// The actual fetching from the API happens here
+function fetchData(station) {
+
+  fetch('https://rata.digitraffic.fi/api/v1/live-trains/station/' + station)
+  .then(
+    function(response) {
+      if (response.status !== 200) {
+        console.log('Looks like there was a problem. Status Code: ' +
+          response.status)
+        return
+      }
+
+      // Examine the text in the response
+      response.json().then(function(data) {
         
         let trains = document.getElementById('trains')
         let i = 0
 
         for (const key in data) {
           if (data.hasOwnProperty(key)) {
-            const element = data[key];
 
-            trains.innerText= '' + trains.innerText + element.trainNumber + '\n'
-            
+            const element = data[key]
+
+            let found = false
+
+            for(let i = 0; i < element.timeTableRows.length; i++) {
+              if (element.timeTableRows[i].stationShortCode == station) {
+
+                  found = true
+                  break  
+              }
+            }
+            if (found === true) {
+
+              console.log(element)
+              trains.innerText = '' + trains.innerText + ' ' + element.trainType + element.trainNumber + ', ' + element.trainCategory + '\n'
+            }
           }
         }
         
