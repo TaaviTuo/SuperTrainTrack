@@ -2,7 +2,7 @@
 
 window.addEventListener('load', ready)
 
-// the script starts working only after the whole html page has loaded
+// The script starts working only after the whole html page has loaded
 function ready() {
 
   let searchButton = document.getElementById('startSearch')
@@ -10,7 +10,7 @@ function ready() {
   searchButton.addEventListener('click', readStation)
 }
 
-// reads the station user entered
+// Reads the station user entered
 function readStation() {
 
   let userInput = document.forms.search.station.value
@@ -70,7 +70,7 @@ function swapStationName(station) {
 
 // The actual fetching from the API happens here
 function fetchData(station) {
-
+  
   fetch('https://rata.digitraffic.fi/api/v1/live-trains/station/' + station)
   .then(
     function(response) {
@@ -92,18 +92,36 @@ function fetchData(station) {
             const element = data[key]
 
             let found = false
+            let currentdate = new Date()
+            currentdate.setHours(currentdate.getHours() + 2)
+            let currentTime = currentdate
+            console.log(currentTime.toUTCString() + 'current')
 
+            // Time variable so we get trains that are leaving in 30 minutes
+            currentdate.setMinutes(currentdate.getMinutes() + 30)
+            let endTime = currentdate
+            console.log(endTime.toUTCString() + 'end')
+
+            // The time the train is on the station searched for
+            let stationTime = ''
+
+            // Checks the info of the trains for mentions of the station searched for
             for(let i = 0; i < element.timeTableRows.length; i++) {
-              if (element.timeTableRows[i].stationShortCode == station) {
 
-                  found = true
-                  break  
+              let schedule = new Date(element.timeTableRows[i].scheduledTime)
+
+              if (element.timeTableRows[i].stationShortCode == station && schedule < endTime) {
+
+                console.log(schedule.toUTCString() + 'schedule')
+                stationTime = element.timeTableRows[i].scheduledTime.substring(11, 16)
+                found = true
+                break  
               }
             }
             if (found === true) {
 
               console.log(element)
-              trains.innerText = '' + trains.innerText + ' ' + element.trainType + element.trainNumber + ', ' + element.trainCategory + '\n'
+              trains.innerText = '' + trains.innerText + ' ' + stationTime + ' | ' + element.trainType + element.trainNumber + ' | ' + element.trainCategory + '\n'
             }
           }
         }
