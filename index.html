@@ -3,18 +3,23 @@
   <head>
     <title>SuperTrainTrack</title>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="/js/jquery-ui.css">
+  
     <style media="screen"></style>
-    <script></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <script src = "SuperTrainTrack.js"></script>
+      <script src="bootstrap.js"></script>
+
   </head>
   <body>
     <form name="search">
-        <p>Station:</p>
-        <input type="text" name="station"/>
+        <input type="text" id="station" placeholder="Station to search for"/>
+        <input type="text" id="untilDeparture" placeholder="Minutes until departure"/>
+        <button id="startSearch">Search</button>
     </form>
-    <button id="startSearch">Search</button>
-    <h1>Trains</h1>
+    
+    <h1 id = "header"></h1>
     <p id ="trains"></p>
-    <script src = 'SuperTrainTrack.js'></script>
   </body>
 </html>
