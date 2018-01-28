@@ -1,39 +1,55 @@
 'use strict'
 
 window.addEventListener('load', ready)
+window.addEventListener('load', activateAutocomplete)
+
+let array = []
 
 // The script starts working only after the whole html page has loaded
 function ready() {
+  
+  createAutocomplete()
 
   let searchButton = document.getElementById('startSearch')
 
-  searchButton.addEventListener('click', readStation)
+  searchButton.addEventListener('click', readInput)
+  
+}
+
+function activateAutocomplete() {
+
+  $( function() {
+    var availableTags = array
+    $( "#station" ).autocomplete({
+      source: availableTags
+    });
+  } );
 }
 
 // Reads the station user entered
-function readStation() {
+function readInput() {
 
-  let userInput = document.forms.search.station.value
+  let userStation = document.forms.search.station.value
+  let userUntilDeparture = 0
+  userUntilDeparture = document.forms.search.untilDeparture.value
 
-  console.log(userInput)
+  console.log(userStation)
 
-  if (userInput === 'Tampere') {
+  if (userStation === 'Tampere' || userStation === 'tampere') {
 
-    userInput = 'Tampere asema'
-  } else if (userInput === 'Tikkurila'){
+    userStation = 'Tampere asema'
+  } else if (userStation === 'Helsinki' || userStation === 'helsinki') {
 
-    userInput = 'Tikkurila asema'
-  } else if (userInput === 'Helsinki') {
-
-    userInput = 'Helsinki asema'
+    userStation = 'Helsinki asema'
   } else {
-
+    
   }
-  swapStationName(userInput)
+
+  handleInput(userStation, userUntilDeparture)
 }
 
 // Translates the station to the shortened id that can be used when searching for the schedules
-function swapStationName(station) {
+function handleInput(station, userUntilDeparture) {
   
   fetch('https://rata.digitraffic.fi/api/v1/metadata/stations')
   .then(
@@ -59,7 +75,7 @@ function swapStationName(station) {
             
           }
         }
-        fetchData(station)     
+        fetchData(station, userUntilDeparture)     
       })
     }
   )
@@ -69,9 +85,12 @@ function swapStationName(station) {
 }
 
 // The actual fetching from the API happens here
-function fetchData(station) {
+function fetchData(station, untilDep) {
   
-  fetch('https://rata.digitraffic.fi/api/v1/live-trains/station/' + station)
+  let header = document.getElementById('header')
+  header.innerText = 'Trains going trough the station searched for'
+
+  fetch('https://rata.digitraffic.fi/api/v1/live-trains/station/' + station + '?minutes_before_departure=' + untilDep + '&minutes_after_departure=0&minutes_before_arrival=0&minutes_after_arrival=0')
   .then(
     function(response) {
       if (response.status !== 200) {
@@ -92,28 +111,15 @@ function fetchData(station) {
             const element = data[key]
 
             let found = false
-            let currentdate = new Date()
-            currentdate.setHours(currentdate.getHours() + 2)
-            let currentTime = currentdate
-            console.log(currentTime.toUTCString() + 'current')
-
-            // Time variable so we get trains that are leaving in 30 minutes
-            currentdate.setMinutes(currentdate.getMinutes() + 30)
-            let endTime = currentdate
-            console.log(endTime.toUTCString() + 'end')
-
-            // The time the train is on the station searched for
-            let stationTime = ''
 
             // Checks the info of the trains for mentions of the station searched for
-            for(let i = 0; i < element.timeTableRows.length; i++) {
+            for(let i = 0; i < element.timeTableRows.length; i++) {              
 
-              let schedule = new Date(element.timeTableRows[i].scheduledTime)
+              if (element.timeTableRows[i].stationShortCode == station && element.timeTableRows[i].type == 'DEPARTURE') {
 
-              if (element.timeTableRows[i].stationShortCode == station && schedule < endTime) {
-
-                console.log(schedule.toUTCString() + 'schedule')
-                stationTime = element.timeTableRows[i].scheduledTime.substring(11, 16)
+                let schedule = new Date(element.timeTableRows[i].scheduledTime)
+                schedule.setHours(schedule.getHours() + 2)
+                stationTime = schedule.toUTCString().substring(16, 22)
                 found = true
                 break  
               }
@@ -125,11 +131,48 @@ function fetchData(station) {
             }
           }
         }
-        
       })
+      trains.innerText = ''
     }
   )
   .catch(function(err) {
     console.log('Fetch Error :-S', err)
   })
+}
+
+function createAutocomplete() {
+  
+  fetch('https://rata.digitraffic.fi/api/v1/metadata/stations')
+  .then(
+    function(response) {
+      if (response.status !== 200) {
+        console.log('Looks like there was a problem. Status Code: ' +
+          response.status)
+        return
+      }
+
+      // Examine the text in the response
+      response.json().then(function(data) {
+
+        for (const key in data) {
+          if (data.hasOwnProperty(key)) {
+
+            let element = data[key]
+            if(element.passengerTraffic === true) {
+             
+              turnIntoArray(element.stationName)
+            }
+          }
+        }
+      }) 
+    }
+  )
+  .catch(function(err) {
+    console.log('Fetch Error :-S', err)
+  })
+}
+
+function turnIntoArray(stationName) {
+
+  array.push(stationName)
 }
