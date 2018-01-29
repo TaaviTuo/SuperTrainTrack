@@ -175,4 +175,3 @@ function createAutocomplete() {
 function turnIntoArray(stationName) {
 
   array.push(stationName)
-}
