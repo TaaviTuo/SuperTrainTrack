@@ -82,7 +82,7 @@ function handleInput(station, userUntilDeparture) {
     })
 }
 
-// The actual fetching from the API happens here
+// The actual fetching of the trains from the API happens here
 function fetchData(station, untilDep) {
 
   let depTrains = document.getElementById('departures')
@@ -100,6 +100,7 @@ function fetchData(station, untilDep) {
         // Examine the text in the response
         response.json().then(function(data) {
 
+          //Create the top row of the departing table
           let infoRow = depTrains.insertRow(0)
           let cell1 = infoRow.insertCell(0)
           cell1.innerHTML = 'Time'
@@ -109,7 +110,10 @@ function fetchData(station, untilDep) {
           cell3.innerHTML = 'Train type'
           let cell4 = infoRow.insertCell(3)
           cell4.innerHTML = 'Destination'
+          let cell5 = infoRow.insertCell(4)
+          cell5.innerHTML = 'Track'
 
+          //Create the top row of the arrivals table
           let arrInfoRow = arrTrains.insertRow(0)
           let arrCell1 = arrInfoRow.insertCell(0)
           arrCell1.innerHTML = 'Time'
@@ -119,6 +123,8 @@ function fetchData(station, untilDep) {
           arrCell3.innerHTML = 'Train type'
           let arrCell4 = arrInfoRow.insertCell(3)
           arrCell4.innerHTML = 'Destination'
+          let arrCell5 = arrInfoRow.insertCell(4)
+          arrCell5.innerHTML = 'Track'
 
           let i = 1
 
@@ -127,13 +133,14 @@ function fetchData(station, untilDep) {
 
               let row = depTrains.insertRow(i)
               let arrRow = arrTrains.insertRow(i)
+              let track
 
               const element = data[key]
 
               let found = false
               let stationTime
 
-              // Checks the info of the trains for mentions of the station searched for
+              // Get the info of departing trains
               for(let j = 0; j < element.timeTableRows.length; j++) {              
 
                 if (element.timeTableRows[j].stationShortCode == station && element.timeTableRows[j].type == 'DEPARTURE' && (element.trainCategory === 'Commuter' || element.trainCategory === 'Long-distance')) {
@@ -141,6 +148,7 @@ function fetchData(station, untilDep) {
                   let schedule = new Date(element.timeTableRows[j].scheduledTime)
                   schedule.setHours(schedule.getHours() + 2)
                   stationTime = schedule.toUTCString().substring(16, 22)
+                  track = element.timeTableRows[j].commercialTrack
                   found = true
                   break  
                 }
@@ -148,32 +156,8 @@ function fetchData(station, untilDep) {
               if (found === true) {
 
                 console.log(element)
-                let arrCell1 = arrRow.insertCell(0)
-                arrCell1.innerHTML = stationTime
-                let arrCell2 = arrRow.insertCell(1)
-                arrCell2.innerHTML = element.trainType + element.trainNumber
-                let arrCell3 = arrRow.insertCell(2)
-                arrCell3.innerHTML = element.trainCategory
-                let arrCell4 = arrRow.insertCell(3)
-                let destination = element.timeTableRows.length - 1
-                arrCell4.innerHTML = element.timeTableRows[destination].stationShortCode
-                console.log(element.timeTableRows[destination].stationShortCode)
-                //trains.innerText = '' + trains.innerText + ' ' + stationTime + ' | ' + element.trainType + element.trainNumber + ' | ' + element.trainCategory + '\n'
-              }
-              for(let j = 0; j < element.timeTableRows.length; j++) {              
 
-                if (element.timeTableRows[j].stationShortCode == station && element.timeTableRows[j].type == 'ARRIVAL' && (element.trainCategory === 'Commuter' || element.trainCategory === 'Long-distance')) {
-                  
-                  let schedule = new Date(element.timeTableRows[j].scheduledTime)
-                  schedule.setHours(schedule.getHours() + 2)
-                  stationTime = schedule.toUTCString().substring(16, 22)
-                  found = true
-                  break  
-                }
-              }
-              if (found === true) {
-
-                console.log(element)
+                //Create the table from the info
                 let cell1 = row.insertCell(0)
                 cell1.innerHTML = stationTime
                 let cell2 = row.insertCell(1)
@@ -182,9 +166,39 @@ function fetchData(station, untilDep) {
                 cell3.innerHTML = element.trainCategory
                 let cell4 = row.insertCell(3)
                 let destination = element.timeTableRows.length - 1
-                cell4.innerHTML = element.timeTableRows[destination].stationShortCode
-                console.log(element.timeTableRows[destination].stationShortCode)
-                //trains.innerText = '' + trains.innerText + ' ' + stationTime + ' | ' + element.trainType + element.trainNumber + ' | ' + element.trainCategory + '\n'
+                cell4.innerHTML = element.timeTableRows[destination].stationShortCode 
+                let cell5 = row.insertCell(4)
+                cell5.innerHTML = track 
+              }
+
+              // Get the info of arriving trains
+              for(let j = 0; j < element.timeTableRows.length; j++) {              
+
+                if (element.timeTableRows[j].stationShortCode == station && element.timeTableRows[j].type == 'ARRIVAL' && (element.trainCategory === 'Commuter' || element.trainCategory === 'Long-distance')) {
+                  
+                  let schedule = new Date(element.timeTableRows[j].scheduledTime)
+                  schedule.setHours(schedule.getHours() + 2)
+                  stationTime = schedule.toUTCString().substring(16, 22)
+                  track = element.timeTableRows[j].commercialTrack
+                  found = true
+                  break  
+                }
+              }
+
+              if (found === true) {
+
+                //Create the table from the info
+                let arrCell1 = arrRow.insertCell(0)
+                arrCell1.innerHTML = stationTime
+                let arrCell2 = arrRow.insertCell(1)
+                arrCell2.innerHTML = element.trainType + element.trainNumber
+                let arrCell3 = arrRow.insertCell(2)
+                arrCell3.innerHTML = element.trainCategory
+                let arrCell4 = arrRow.insertCell(3)
+                let destination = element.timeTableRows.length - 1
+                arrCell4.innerHTML = element.timeTableRows[destination].stationShortCode      
+                let arrCell5 = arrRow.insertCell(4)
+                arrCell5.innerHTML = track
               }
               i++
             }
@@ -192,6 +206,7 @@ function fetchData(station, untilDep) {
         })
         //Resets the table between searches
         depTrains.innerText = ''
+        arrTrains.innerText = ''
       }
     )
     .catch(function(err) {
