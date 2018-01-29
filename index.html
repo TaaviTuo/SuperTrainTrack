@@ -3,16 +3,34 @@
   <head>
     <title>SuperTrainTrack</title>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <style media="screen"></style>
-    <script></script>
+    <link rel="stylesheet" href="js/jquery-ui.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <style media="screen">
+      tr > td{padding-left: 1em}
+      tr > td{padding-right: 1em}
+      form {margin: 1em}
+      table {margin: 1em}
+      button {margin-left: 1em}
+      h1 {margin: 0.4em}
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <script src = "js/SuperTrainTrack.js"></script>
+      <script src="js/bootstrap.js"></script>
+
   </head>
   <body>
     <form name="search">
-        <p>Station:</p>
-        <input type="text" name="station"/>
+        <input type="text" id="station" placeholder="Station to search for"/>
+        <input type="text" id="untilDeparture" placeholder="Minutes until departure"/>
+        
     </form>
     <button id="startSearch">Search</button>
-    <script src = 'SuperTrainTrack.js'></script>
+    <h1 id="dep">Departures</h1>
+    <table id ="departures" class="table-bordered">
+    </table>
+    <h1 id="arr">Arrivals</h1>
+    <table id ="arrivals" class="table-bordered">
+      </table>
   </body>
 </html>
